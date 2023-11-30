@@ -1,0 +1,6 @@
+man/
+*.Rproj
+.Rhistory
+.Rbuildignore
+NAMESPACE
+.Rproj.user/
