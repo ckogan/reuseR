@@ -1,5 +1,7 @@
 #' @export
-reuseR <- function(fcall, repo = ".", verbose = F, debugFile = F, verify = F, ignore = NULL, depends = NULL) {
+reuseR <- function(fcall, repo = ".", verbose = F, debugFile = F, verify = F,
+                   ignore = NULL, depends = NULL, capture_output = F,
+                   attach = F) {
   call <- substitute(fcall)
 
   if(class(call) == "call") {
@@ -37,16 +39,30 @@ reuseR <- function(fcall, repo = ".", verbose = F, debugFile = F, verify = F, ig
   }
 
   name <- paste0("md5_", dig, ".RDS")
+  name_output <- paste0("md5_", dig,"_output.txt")
   files <- list.files(repo)
   fmatch <- match(name, files)
   if(verify || is.na(fmatch)) {
-    obj <- fcall
+    if(!capture_output) {
+      obj <- fcall
+    }
+    else {
+      captured_output <- capture.output(obj <- fcall)
+      cat(captured_output, sep = "\n")
+    }
+
     if(is.na(fmatch)) {
       saveRDS(obj, file = paste0(repo, "/", name))
+      if(capture_output)
+        cat(captured_output, file = paste0(repo, "/", name_output), sep = "\n", append = F)
     }
   }
   if(!is.na(fmatch))  {
     obj_loaded <- readRDS(paste0(repo, "/", files[fmatch]))
+    if(capture_output) {
+      captured_output <- readLines(paste0(repo, "/", name_output))
+      cat(captured_output, sep = "\n")
+    }
     if(!verify) {
       obj <- obj_loaded
     } else {
@@ -74,7 +90,12 @@ reuseR <- function(fcall, repo = ".", verbose = F, debugFile = F, verify = F, ig
     print(dig)
   }
   if(verbose & debugFile & is.na(fmatch)) sink()
-  obj
+
+  if (attach) {
+    list2env(obj, envir = .GlobalEnv)
+  } else {
+    return(obj)
+  }
 }
 
 reuse_match <- function(dig, repo) {
