@@ -4,3 +4,4 @@ man/
 .Rbuildignore
 NAMESPACE
 .Rproj.user/
+R/R_Scratchpad/
